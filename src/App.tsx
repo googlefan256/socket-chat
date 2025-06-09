@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useUsername } from "./hooks/username";
 import { useWebsocket, type ConnectionState } from "./hooks/websocket";
 
@@ -12,7 +12,7 @@ function App() {
     const [username, setUsername] = useUsername();
     const [submitMessage, error, connectionState, messages] = useWebsocket();
     const [messageInput, setMessageInput] = useState("");
-
+    const inputRef = useRef<HTMLInputElement>(null);
     function getUserColor(username: string) {
         const colors = [
             "bg-blue-500",
@@ -31,8 +31,26 @@ function App() {
         return colors[Math.abs(hash) % colors.length];
     }
 
+    const handleSendMessage = () => {
+        if (connectionState !== "open" || !username || !messageInput.trim()) {
+            return;
+        }
+        submitMessage(username, messageInput);
+        setMessageInput("");
+        if (inputRef.current) {
+            inputRef.current.focus();
+        }
+    };
+
+    const handleKeyPress = (e: React.KeyboardEvent) => {
+        if (e.key === "Enter" && !e.shiftKey) {
+            e.preventDefault();
+            handleSendMessage();
+        }
+    };
+
     return (
-        <div className="flex flex-col h-screen bg-gray-50">
+        <div className="flex flex-col h-screen bg-gray-100">
             <div className="bg-white shadow-sm border-b p-4">
                 <div className="max-w-4xl mx-auto flex items-center justify-between">
                     <h1 className="text-2xl font-bold text-gray-800">
@@ -54,46 +72,48 @@ function App() {
             </div>
 
             <div className="flex-1 max-w-4xl mx-auto w-full flex flex-col">
-                <div className="flex-1 p-4 overflow-y-auto">
-                    <div className="bg-white rounded-lg shadow-sm border h-full p-4">
-                        {messages.length === 0 ? (
-                            <div className="flex items-center justify-center h-full text-gray-500">
-                                <p>
-                                    メッセージがありません。最初のメッセージを送信しましょう！
-                                </p>
-                            </div>
-                        ) : (
-                            <div className="space-y-4">
-                                {messages.map((message, index) => {
-                                    const supIndex = index * 2;
-                                    const userColor = getUserColor(
-                                        message.username,
-                                    );
-                                    return (
-                                        <div
-                                            key={supIndex}
-                                            className="flex flex-col"
-                                        >
-                                            <div className="flex items-center space-x-2 mb-1">
-                                                <span
-                                                    className={`inline-block w-3 h-3 rounded-full ${userColor}`}
-                                                />
-                                                <span className="text-sm font-semibold text-gray-700">
-                                                    {message.username}
-                                                </span>
-                                            </div>
-                                            <div className="flex">
-                                                <div
-                                                    className={`${userColor} text-white px-4 py-2 rounded-lg rounded-tl-sm max-w-md shadow-sm`}
-                                                >
-                                                    {message.message}
+                <div className="flex-1 p-4 overflow-hidden max-h-[calc(100vh-280px)]">
+                    <div className="bg-white rounded-lg shadow-sm border h-full p-4 flex flex-col">
+                        <div className="flex-1 overflow-y-auto">
+                            {messages.length === 0 ? (
+                                <div className="flex items-center justify-center h-full text-gray-500">
+                                    <p>
+                                        メッセージがありません。最初のメッセージを送信しましょう！
+                                    </p>
+                                </div>
+                            ) : (
+                                <div className="space-y-4">
+                                    {messages.map((message, index) => {
+                                        const supIndex = index * 2;
+                                        const userColor = getUserColor(
+                                            message.username,
+                                        );
+                                        return (
+                                            <div
+                                                key={supIndex}
+                                                className="flex flex-col"
+                                            >
+                                                <div className="flex items-center space-x-2 mb-1">
+                                                    <span
+                                                        className={`inline-block w-3 h-3 rounded-full ${userColor}`}
+                                                    />
+                                                    <span className="text-sm font-semibold text-gray-700">
+                                                        {message.username}
+                                                    </span>
+                                                </div>
+                                                <div className="flex">
+                                                    <div
+                                                        className={`${userColor} text-white px-4 py-2 rounded-lg rounded-tl-sm max-w-md shadow-sm`}
+                                                    >
+                                                        {message.message}
+                                                    </div>
                                                 </div>
                                             </div>
-                                        </div>
-                                    );
-                                })}
-                            </div>
-                        )}
+                                        );
+                                    })}
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </div>
 
@@ -113,18 +133,14 @@ function App() {
                             placeholder="メッセージを入力..."
                             value={messageInput}
                             onChange={(e) => setMessageInput(e.target.value)}
+                            onKeyDown={handleKeyPress}
                             className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            ref={inputRef}
                         />
                         <button
                             className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors *:duration-200 disabled:opacity-50"
                             type="button"
-                            onClick={() => {
-                                if (connectionState !== "open") {
-                                    return;
-                                }
-                                submitMessage(username, messageInput);
-                                setMessageInput("");
-                            }}
+                            onClick={handleSendMessage}
                             disabled={
                                 !username ||
                                 !messageInput.trim() ||

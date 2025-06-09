@@ -16,9 +16,9 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - tag: ghcr.io/googlefan256/socket-chat:latest-arm64
+          - tag: ghcr.io/neodyland/socket-chat:latest-arm64
             runs-on: ubuntu-latest
-          - tag: ghcr.io/googlefan256/socket-chat:latest-amd64
+          - tag: ghcr.io/neodyland/socket-chat:latest-amd64
             runs-on: ubuntu-24.04-arm
     runs-on: ${{ matrix.runs-on }}
     steps:
@@ -65,6 +65,6 @@ jobs:
 
       - name: Merge
         run: |
-          docker buildx imagetools create -t ghcr.io/googlefan256/socket-chat:latest \
-              ghcr.io/googlefan256/socket-chat:latest-amd64 \
-              ghcr.io/googlefan256/socket-chat:latest-arm64
+          docker buildx imagetools create -t ghcr.io/neodyland/socket-chat:latest \
+              ghcr.io/neodyland/socket-chat:latest-amd64 \
+              ghcr.io/neodyland/socket-chat:latest-arm64

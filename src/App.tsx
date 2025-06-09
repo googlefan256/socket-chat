@@ -42,13 +42,6 @@ function App() {
         }
     };
 
-    const handleKeyPress = (e: React.KeyboardEvent) => {
-        if (e.key === "Enter" && !e.shiftKey) {
-            e.preventDefault();
-            handleSendMessage();
-        }
-    };
-
     return (
         <div className="flex flex-col h-screen bg-gray-100">
             <div className="bg-white shadow-sm border-b p-4">
@@ -133,7 +126,6 @@ function App() {
                             placeholder="メッセージを入力..."
                             value={messageInput}
                             onChange={(e) => setMessageInput(e.target.value)}
-                            onKeyDown={handleKeyPress}
                             className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                             ref={inputRef}
                         />

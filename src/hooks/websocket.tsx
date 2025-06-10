@@ -6,8 +6,12 @@ import {
     safeSerialize,
     type ServerMessage,
 } from "../proto";
+import useWebSocket, { ReadyState } from "react-use-websocket";
 
 function currentURL() {
+    if (import.meta.env.DEV) {
+        return "ws://localhost:3000/ws";
+    }
     return `${window.location.protocol === "https:" ? "wss" : "ws"}://${
         window.location.host
     }/ws`;
@@ -16,43 +20,33 @@ function currentURL() {
 export type ConnectionState = "connecting" | "open" | "closed";
 
 export function useWebsocket() {
-    const [websocket, setWebsocket] = useState<WebSocket | null>(null);
     const [messages, setMessages] = useState<ServerMessage[]>([]);
     const [error, setError] = useState<string | null>(null);
-    const [connectionState, setConnectionState] =
-        useState<ConnectionState>("connecting");
-    useEffect(() => {
-        const ws = new WebSocket(currentURL());
-        setWebsocket(ws);
 
-        ws.onmessage = (event) => {
+    const { sendMessage, lastMessage, readyState } = useWebSocket(currentURL());
+    const connectionState: ConnectionState =
+        readyState === ReadyState.CONNECTING
+            ? "connecting"
+            : readyState === ReadyState.OPEN
+              ? "open"
+              : "closed";
+    useEffect(() => {
+        if (lastMessage !== null) {
+            console.log("Received message");
             const newMessage = safeParse(
                 ServerMessageSchema,
-                JSON.parse(event.data.toString()),
+                JSON.parse(lastMessage.data.toString()),
             );
             if (!newMessage) {
-                console.error("Received invalid message:", event.data);
+                console.error("Received invalid message:", lastMessage.data);
                 return;
             }
             setMessages((prev) => [...prev, newMessage]);
-        };
-        ws.onopen = () => {
-            setConnectionState("open");
-            setError(null);
-        };
-        ws.onerror = (error) => {
-            setError(`WebSocket error: ${String(error)}`);
-            setConnectionState("closed");
-            setWebsocket(null);
-        };
-
-        return () => {
-            ws.close();
-        };
-    }, []);
+        }
+    }, [lastMessage]);
 
     function submitMessage(username: string, message: string) {
-        if (!websocket || websocket.readyState !== WebSocket.OPEN) {
+        if (readyState !== ReadyState.OPEN) {
             setError("WebSocket is not connected");
             return;
         }
@@ -60,7 +54,7 @@ export function useWebsocket() {
             setError("Message cannot be empty");
             return;
         }
-        websocket.send(
+        sendMessage(
             safeSerialize(ClientMessageSchema, {
                 username,
                 message,

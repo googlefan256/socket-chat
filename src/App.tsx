@@ -3,9 +3,9 @@ import { useUsername } from "./hooks/username";
 import { useWebsocket, type ConnectionState } from "./hooks/websocket";
 
 const connectionStateMap: Record<ConnectionState, [string, string]> = {
-    connecting: ["接続中", "bg-yellow-500"],
-    open: ["接続済み", "bg-green-500"],
-    closed: ["未接続", "bg-red-500"],
+    connecting: ["接続中", "status-warning"],
+    open: ["接続済み", "status-success"],
+    closed: ["未接続", "status-error"],
 };
 
 function App() {
@@ -15,14 +15,14 @@ function App() {
     const inputRef = useRef<HTMLInputElement>(null);
     function getUserColor(username: string) {
         const colors = [
-            "bg-blue-500",
-            "bg-green-500",
-            "bg-purple-500",
-            "bg-pink-500",
-            "bg-indigo-500",
-            "bg-teal-500",
-            "bg-orange-500",
-            "bg-red-500",
+            "bg-error",
+            "bg-warning",
+            "bg-success",
+            "bg-info",
+            "bg-primary",
+            "bg-secondary",
+            "bg-accent",
+            "bg-neutral",
         ];
         let hash = 0;
         for (let i = 0; i < username.length; i++) {
@@ -43,94 +43,87 @@ function App() {
     };
 
     return (
-        <div className="flex flex-col h-screen bg-gray-100">
-            <div className="bg-white shadow-sm border-b p-4">
-                <div className="max-w-4xl mx-auto flex items-center justify-between">
-                    <h1 className="text-2xl font-bold text-gray-800">
-                        リアルタイムチャット
-                    </h1>
-                    <div className="flex items-center space-x-2">
-                        <div
-                            className={`w-3 h-3 rounded-full ${
-                                connectionStateMap[connectionState][1]
-                            }`}
-                        />
-                        <span
-                            className={`text-sm font-medium ${connectionStateMap[connectionState][1]}`}
-                        >
-                            {connectionStateMap[connectionState][0]}
-                        </span>
-                    </div>
+        <div className="h-screen px-6 py-4">
+            <div className="navbar bg-base-100 flex items-center justify-between drop-shadow-sm px-4">
+                <span className="text-accent-content text-xl">
+                    リアルタイムチャット
+                </span>
+                <div className="flex items-center space-x-2">
+                    <div
+                        className={`w-3 h-3 rounded-full ${
+                            connectionStateMap[connectionState][1]
+                        }`}
+                    />
+                    <span className="text-accent-content">
+                        {connectionStateMap[connectionState][0]}
+                    </span>
                 </div>
             </div>
-
-            <div className="flex-1 max-w-4xl mx-auto w-full flex flex-col">
-                <div className="flex-1 p-4 overflow-hidden max-h-[calc(100vh-280px)]">
-                    <div className="bg-white rounded-lg shadow-sm border h-full p-4 flex flex-col">
-                        <div className="flex-1 overflow-y-auto">
-                            {messages.length === 0 ? (
-                                <div className="flex items-center justify-center h-full text-gray-500">
-                                    <p>
-                                        メッセージがありません。最初のメッセージを送信しましょう！
-                                    </p>
-                                </div>
-                            ) : (
-                                <div className="space-y-4">
-                                    {messages.map((message, index) => {
-                                        const supIndex = index * 2;
-                                        const userColor = getUserColor(
-                                            message.username,
-                                        );
-                                        return (
-                                            <div
-                                                key={supIndex}
-                                                className="flex flex-col"
-                                            >
-                                                <div className="flex items-center space-x-2 mb-1">
-                                                    <span
-                                                        className={`inline-block w-3 h-3 rounded-full ${userColor}`}
-                                                    />
-                                                    <span className="text-sm font-semibold text-gray-700">
-                                                        {message.username}
-                                                    </span>
-                                                </div>
-                                                <div className="flex">
-                                                    <div
-                                                        className={`${userColor} text-white px-4 py-2 rounded-lg rounded-tl-sm max-w-md shadow-sm`}
-                                                    >
-                                                        {message.message}
-                                                    </div>
+            <div className="max-w-4xl mx-auto w-full m-4 card bg-base-200 card-border border-base-300">
+                <div className="card-body">
+                    <p className="card-title">ユーザー名</p>
+                    <input
+                        type="text"
+                        id="username"
+                        placeholder="ユーザー名"
+                        value={username}
+                        onChange={(e) => setUsername(e.target.value)}
+                        className="input input-primary"
+                    />
+                </div>
+            </div>
+            <div className="max-w-4xl max-h-[80vh] mx-auto w-full overflow-hidden card bg-base-200 card-border border-base-300">
+                <div className="card-body flex flex-col space-y-4">
+                    <div className="flex-1 overflow-y-auto">
+                        {messages.length === 0 ? (
+                            <div className="flex items-center justify-center h-full">
+                                <p>
+                                    メッセージがありません。最初のメッセージを送信しましょう！
+                                </p>
+                            </div>
+                        ) : (
+                            <div className="space-y-4">
+                                {messages.map((message, index) => {
+                                    const supIndex = index * 2;
+                                    const userColor = getUserColor(
+                                        message.username,
+                                    );
+                                    return (
+                                        <div
+                                            key={supIndex}
+                                            className="flex flex-col"
+                                        >
+                                            <div className="flex items-center space-x-2 mb-1">
+                                                <span
+                                                    className={`inline-block w-3 h-3 rounded-full ${userColor}`}
+                                                />
+                                                <span className="text-sm font-semibold">
+                                                    {message.username}
+                                                </span>
+                                            </div>
+                                            <div className="chat chat-start">
+                                                <div className="chat-bubble">
+                                                    {message.message}
                                                 </div>
                                             </div>
-                                        );
-                                    })}
-                                </div>
-                            )}
-                        </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        )}
                     </div>
-                </div>
 
-                <div className="p-4 bg-white border-t">
-                    <div className="flex space-x-3">
+                    <div className="flex flex-col sm:flex-row space-y-3 sm:space-y-0">
                         <input
                             type="text"
-                            id="username"
-                            placeholder="ユーザー名"
-                            value={username}
-                            onChange={(e) => setUsername(e.target.value)}
-                            className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent w-32"
-                        />
-                        <input
-                            type="text"
-                            id="messageInput"
                             placeholder="メッセージを入力..."
                             value={messageInput}
                             onChange={(e) => setMessageInput(e.target.value)}
-                            className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            className="input input-primary flex-grow"
                             ref={inputRef}
                         />
                         <button
-                            className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors *:duration-200 disabled:opacity-50"
+                            className="btn btn-neutral"
                             type="button"
                             onClick={handleSendMessage}
                             disabled={
@@ -146,10 +139,10 @@ function App() {
             </div>
 
             {error && (
-                <div className="bg-red-50 border-l-4 border-red-400 p-4 mx-auto max-w-4xl w-full">
+                <div className="p-4 mx-auto max-w-4xl w-full alert alert-error">
                     <div className="flex">
                         <div className="ml-3">
-                            <p className="text-sm text-red-700">
+                            <p className="text-sm">
                                 <span className="font-medium">エラー:</span>{" "}
                                 {error}
                             </p>
